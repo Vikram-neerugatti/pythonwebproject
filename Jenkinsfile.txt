@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define any environment variables
+        PYTHON_ENV = 'venv'
+        DEPLOY_DIR = "C:/path/to/local/http/server/root"  // Path to local HTTP server directory
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // Clone the repository
+                git 'https://github.com/Vikram-neerugatti/pythonwebproject.git'
+            }
+        }
+        stage('Setup Python Environment') {
+            steps {
+                // Set up Python virtual environment and install dependencies
+                bat """
+                    python -m venv ${PYTHON_ENV}
+                    ${PYTHON_ENV}\\Scripts\\activate
+                    pip install -r requirements.txt
+                """
+            }
+        }
+        stage('Run Tests') {
+            steps {
+                // Run unit tests
+                bat """
+                    ${PYTHON_ENV}\\Scripts\\activate
+                    pytest
+                """
+            }
+        }
+        stage('Build') {
+            steps {
+                // If applicable, build the project (e.g., compile assets)
+                echo 'Building the project...'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                // Deploy the application to local HTTP server
+                bat """
+                    xcopy /s /y /i ${WORKSPACE} ${DEPLOY_DIR}
+                """
+                echo 'Deployment complete.'
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up the workspace
+            cleanWs()
+        }
+    }
+}
